@@ -18,6 +18,9 @@ public class MainRestController {
     CredentialRepository credentialRepo;
 
     @Autowired
+    UserRepository userRepo;
+
+    @Autowired
     TokenService tokenService;
 
     private static final Logger log = LoggerFactory.getLogger(MainRestController.class);
@@ -34,6 +37,14 @@ public class MainRestController {
         newCredential.setRole("USER");
         credentialRepo.save(newCredential);
         log.info("Credentials stored successfully in the db.");
+
+        User tempUser = new User();
+        tempUser.setUsername(newCredential.getUsername());
+        tempUser.setEmail(newCredential.getEmail());
+
+        userRepo.save(tempUser);
+        log.info("User data stored successfully in the db.");
+
         return ResponseEntity.ok("Signup successful.");
     }
 
@@ -93,6 +104,50 @@ public class MainRestController {
     }
 
 
+    @PostMapping("/users/update")
+    public ResponseEntity<?> updateUserDetails(@RequestHeader("Authorization") String token, @RequestBody User userParam){
+
+        if(!tokenService.validateToken(token)){
+            log.info("Token is invalid: {}", token);
+            return ResponseEntity.status(401).build();
+        }
+
+        Optional<User> userObj = userRepo.findById(userParam.getUsername());
+
+        if(!userObj.isPresent()){
+            log.info("User does not exist with given username : {}",userParam.getUsername());
+            return ResponseEntity.ok("User does not exist with given username : "+userParam.getUsername());
+        }
+
+        userRepo.save(userParam);
+        log.info("User details updated successfully : {}",userParam);
+        return ResponseEntity.ok("User details updated successully.");
+
+    }
+
+    @GetMapping("/users/view")
+    public ResponseEntity<?> updateUserDetails(@RequestHeader("Authorization") String token){
+
+        if(!tokenService.validateToken(token)){
+            log.info("Token is invalid: {}", token);
+            return ResponseEntity.status(401).build();
+        }
+
+        String[] tokenArray = token.split(" ");
+        String tokenS = tokenArray[1];
+        String tokenUsername = tokenS.split(":")[0];
+
+        Optional<User> userObj = userRepo.findById(tokenUsername);
+
+        if(!userObj.isPresent()){
+            log.info("User does not exist with given username : {}",tokenUsername);
+            return ResponseEntity.ok("User does not exist with given username : "+tokenUsername);
+        }
+
+        log.info("User details fetched successfully : {}",tokenUsername);
+        return ResponseEntity.ok(userObj.get());
+
+    }
 
 
 }
