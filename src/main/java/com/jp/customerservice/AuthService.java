@@ -1,4 +1,4 @@
-package com.jp.productcatalogservice;
+package com.jp.customerservice;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

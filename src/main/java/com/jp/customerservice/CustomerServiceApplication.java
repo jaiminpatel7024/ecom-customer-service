@@ -1,14 +1,14 @@
-package com.jp.productcatalogservice;
+package com.jp.customerservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ProductCatalogServiceApplication {
+public class CustomerServiceApplication {
 
     public static void main(String[] args) {
 
-        SpringApplication.run(ProductCatalogServiceApplication.class, args);
+        SpringApplication.run(CustomerServiceApplication.class, args);
 
     }
 
