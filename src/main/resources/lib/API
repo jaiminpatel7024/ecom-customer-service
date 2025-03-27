@@ -17,7 +17,7 @@ Pass Authorization Token
 POST localhost:8101/api/v1/logout
 Pass Authorization Token
 ---
-GET localhost:8201/api/v1/users/view
+GET localhost:8201/api/v1/users/view/jp123
 Pass Authorization Token
 ---
 POST localhost:8201/api/v1/users/update

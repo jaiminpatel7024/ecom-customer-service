@@ -125,29 +125,23 @@ public class MainRestController {
 
     }
 
-    @GetMapping("/users/view")
-    public ResponseEntity<?> updateUserDetails(@RequestHeader("Authorization") String token){
+    @GetMapping("/users/view/{username}")
+    public ResponseEntity<?> updateUserDetails(@RequestHeader("Authorization") String token, @PathVariable("username") String username){
 
         if(!tokenService.validateToken(token)){
             log.info("Token is invalid: {}", token);
             return ResponseEntity.status(401).build();
         }
 
-        String[] tokenArray = token.split(" ");
-        String tokenS = tokenArray[1];
-        String tokenUsername = tokenS.split(":")[0];
-
-        Optional<User> userObj = userRepo.findById(tokenUsername);
+        Optional<User> userObj = userRepo.findById(username);
 
         if(!userObj.isPresent()){
-            log.info("User does not exist with given username : {}",tokenUsername);
-            return ResponseEntity.ok("User does not exist with given username : "+tokenUsername);
+            log.info("User does not exist with given username : {}",username);
+            return ResponseEntity.ok("User does not exist with given username : "+username);
         }
 
-        log.info("User details fetched successfully : {}",tokenUsername);
+        log.info("User details fetched successfully : {}",username);
         return ResponseEntity.ok(userObj.get());
-
     }
-
 
 }
