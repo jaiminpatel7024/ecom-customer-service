@@ -23,6 +23,9 @@ public class MainRestController {
     @Autowired
     TokenService tokenService;
 
+    @Autowired
+    Producer producer;
+
     private static final Logger log = LoggerFactory.getLogger(MainRestController.class);
 
     @GetMapping("/test")
@@ -31,11 +34,12 @@ public class MainRestController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody Credential newCredential) {
+    public ResponseEntity<?> signup(@RequestBody Credential newCredential) throws JsonProcessingException {
 
         log.info("Signup endpoint called with data {} ",newCredential.toString());
         newCredential.setRole("USER");
         credentialRepo.save(newCredential);
+        producer.publishAuthDatum(newCredential.getUsername(), "SIGNUP");
         log.info("Credentials stored successfully in the db.");
 
         User tempUser = new User();
@@ -61,19 +65,19 @@ public class MainRestController {
                 log.info("Login Successful: {}", credential);
                 Token token =  tokenService.generateToken(credential.getUsername());
                 log.info("Token generated: {}", token);
-               // producer.publishAuthDatum(credential.getUsername(), "LOGIN");
                 String tokenToReturn = credential.getUsername()+":"+token.getTokenId();
+                producer.publishAuthDatum(credential.getUsername(), "LOGIN");
                 return ResponseEntity.ok().header("Authorization",tokenToReturn).body("Login Successful");
             }
             else
             {
-                //producer.publishAuthDatum(credential.getUsername(), "LOGIN_FAILED | INCORRECT_PASSWORD");
+                producer.publishAuthDatum(credential.getUsername(), "LOGIN_FAILED | INCORRECT_PASSWORD");
                 log.info("Login Failed due to incorrect password: {}", credential);
                 return ResponseEntity.badRequest().build();
             }
         }
         else {
-           // producer.publishAuthDatum(credential.getUsername(), "LOGIN_FAILED | USER_NOT_FOUND");
+           producer.publishAuthDatum(credential.getUsername(), "LOGIN_FAILED | USER_NOT_FOUND");
             log.info("Credential does not exist: {}", credential);
             return ResponseEntity.ok("Credential does not exist");
         }
@@ -85,7 +89,7 @@ public class MainRestController {
         if(tokenService.validateToken(token))
         {
             log.info("Token is valid: {}", token);
-           // producer.publishAuthDatum(tokenService.getUsername(token), "TOKEN VALIDATED");
+            producer.publishAuthDatum(tokenService.getUsername(token), "TOKEN VALIDATED");
             return ResponseEntity.ok("valid");
         }
         else
@@ -99,13 +103,13 @@ public class MainRestController {
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) throws JsonProcessingException {
 
         tokenService.invalidateToken(token);
-        //producer.publishAuthDatum(tokenService.getUsername(token), "LOGOUT");
+        producer.publishAuthDatum(tokenService.getUsername(token), "LOGOUT");
         return ResponseEntity.ok("Logged out successfully");
     }
 
 
     @PostMapping("/users/update")
-    public ResponseEntity<?> updateUserDetails(@RequestHeader("Authorization") String token, @RequestBody User userParam){
+    public ResponseEntity<?> updateUserDetails(@RequestHeader("Authorization") String token, @RequestBody User userParam) throws JsonProcessingException {
 
         if(!tokenService.validateToken(token)){
             log.info("Token is invalid: {}", token);
@@ -121,6 +125,7 @@ public class MainRestController {
 
         userRepo.save(userParam);
         log.info("User details updated successfully : {}",userParam);
+        producer.publishAuthDatum(userParam.getUsername(), "PROFILE_UPDATES");
         return ResponseEntity.ok("User details updated successully.");
 
     }
