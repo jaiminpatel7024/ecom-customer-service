@@ -1,26 +1,28 @@
-POST localhost:8201/api/v1/signup
+GET localhost:8072/ecom-customer-service/api/v1/test
+---
+POST localhost:8072/ecom-customer-service/api/v1/signup
 {
 	"username":"jp123",
 	"password":"jp123",
 	"email":"jp123@gmail.com"
 }
 ---
-GET localhost:8201/api/v1/login
+GET localhost:8072/ecom-customer-service/api/v1/login
 {
 	"username":"jp123",
 	"password":"jp123"
 }
 ---
-GET localhost:8201/api/v1/validate
+GET localhost:8072/ecom-customer-service/api/v1/validate
 Pass Authorization Token
 ---
-POST localhost:8101/api/v1/logout
+POST localhost:8072/ecom-customer-service/api/v1/logout
 Pass Authorization Token
 ---
-GET localhost:8201/api/v1/users/view/jp123
+GET localhost:8072/ecom-customer-service/api/v1/users/view/jp123
 Pass Authorization Token
 ---
-POST localhost:8201/api/v1/users/update
+POST localhost:8072/ecom-customer-service/api/v1/users/update
 {
 	"username":"jp123",
 	"fullname":"Jaimin Patel",

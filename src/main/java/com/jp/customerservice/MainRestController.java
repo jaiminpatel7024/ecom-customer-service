@@ -86,10 +86,12 @@ public class MainRestController {
     @GetMapping("validate")
     public ResponseEntity<?> validate(@RequestHeader("Authorization") String token) throws JsonProcessingException {
         log.info("Received request to validate token: {}", token);
+
+        String username = token.split(" ")[1].split(":")[0];
         if(tokenService.validateToken(token))
         {
             log.info("Token is valid: {}", token);
-            producer.publishAuthDatum(tokenService.getUsername(token), "TOKEN VALIDATED");
+            producer.publishAuthDatum(username, "TOKEN VALIDATED");
             return ResponseEntity.ok("valid");
         }
         else
@@ -102,8 +104,9 @@ public class MainRestController {
     @GetMapping("logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) throws JsonProcessingException {
 
+        String username = token.split(" ")[1].split(":")[0];
         tokenService.invalidateToken(token);
-        producer.publishAuthDatum(tokenService.getUsername(token), "LOGOUT");
+        producer.publishAuthDatum(username, "LOGOUT");
         return ResponseEntity.ok("Logged out successfully");
     }
 
