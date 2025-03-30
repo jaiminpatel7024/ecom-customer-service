@@ -24,7 +24,7 @@ public class MainRestController {
     TokenService tokenService;
 
     @Autowired
-    Producer producer;
+    EventProducer eventProducer;
 
     private static final Logger log = LoggerFactory.getLogger(MainRestController.class);
 
@@ -39,7 +39,8 @@ public class MainRestController {
         log.info("Signup endpoint called with data {} ",newCredential.toString());
         newCredential.setRole("USER");
         credentialRepo.save(newCredential);
-        producer.publishAuthDatum(newCredential.getUsername(), "SIGNUP");
+        log.info("Credentials added with data {} ",newCredential.toString());
+        eventProducer.publishAuthDatum(newCredential.getUsername(), "SIGNUP");
         log.info("Credentials stored successfully in the db.");
 
         User tempUser = new User();
@@ -66,18 +67,18 @@ public class MainRestController {
                 Token token =  tokenService.generateToken(credential.getUsername());
                 log.info("Token generated: {}", token);
                 String tokenToReturn = credential.getUsername()+":"+token.getTokenId();
-                producer.publishAuthDatum(credential.getUsername(), "LOGIN");
+                eventProducer.publishAuthDatum(credential.getUsername(), "LOGIN");
                 return ResponseEntity.ok().header("Authorization",tokenToReturn).body("Login Successful");
             }
             else
             {
-                producer.publishAuthDatum(credential.getUsername(), "LOGIN_FAILED | INCORRECT_PASSWORD");
+                eventProducer.publishAuthDatum(credential.getUsername(), "LOGIN_FAILED | INCORRECT_PASSWORD");
                 log.info("Login Failed due to incorrect password: {}", credential);
                 return ResponseEntity.badRequest().build();
             }
         }
         else {
-           producer.publishAuthDatum(credential.getUsername(), "LOGIN_FAILED | USER_NOT_FOUND");
+           eventProducer.publishAuthDatum(credential.getUsername(), "LOGIN_FAILED | USER_NOT_FOUND");
             log.info("Credential does not exist: {}", credential);
             return ResponseEntity.ok("Credential does not exist");
         }
@@ -91,22 +92,24 @@ public class MainRestController {
         if(tokenService.validateToken(token))
         {
             log.info("Token is valid: {}", token);
-            producer.publishAuthDatum(username, "TOKEN VALIDATED");
+            eventProducer.publishAuthDatum(username, "TOKEN VALIDATED");
             return ResponseEntity.ok("valid");
         }
         else
         {
             log.info("Token is invalid: {}", token);
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).body("Unauthorized");
         }
     }
 
     @GetMapping("logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) throws JsonProcessingException {
 
+        log.info("Received request to logout token: {}", token);
         String username = token.split(" ")[1].split(":")[0];
         tokenService.invalidateToken(token);
-        producer.publishAuthDatum(username, "LOGOUT");
+        eventProducer.publishAuthDatum(username, "LOGOUT");
+        log.info("User logged out successfully.");
         return ResponseEntity.ok("Logged out successfully");
     }
 
@@ -114,9 +117,11 @@ public class MainRestController {
     @PostMapping("/users/update")
     public ResponseEntity<?> updateUserDetails(@RequestHeader("Authorization") String token, @RequestBody User userParam) throws JsonProcessingException {
 
+        log.info("Received request to update user data with token: {} and data : {}", token,userParam);
+
         if(!tokenService.validateToken(token)){
             log.info("Token is invalid: {}", token);
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).body("Unauthorized");
         }
 
         Optional<User> userObj = userRepo.findById(userParam.getUsername());
@@ -128,17 +133,19 @@ public class MainRestController {
 
         userRepo.save(userParam);
         log.info("User details updated successfully : {}",userParam);
-        producer.publishAuthDatum(userParam.getUsername(), "PROFILE_UPDATES");
-        return ResponseEntity.ok("User details updated successully.");
+        eventProducer.publishAuthDatum(userParam.getUsername(), "PROFILE_UPDATES");
+        return ResponseEntity.ok("User details updated successfully.");
 
     }
 
     @GetMapping("/users/view/{username}")
     public ResponseEntity<?> updateUserDetails(@RequestHeader("Authorization") String token, @PathVariable("username") String username){
 
+        log.info("Received request to view user data with token: {} and data : {}", token,username);
+
         if(!tokenService.validateToken(token)){
             log.info("Token is invalid: {}", token);
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).body("Unauthorized");
         }
 
         Optional<User> userObj = userRepo.findById(username);

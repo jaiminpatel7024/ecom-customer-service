@@ -9,9 +9,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class Producer
+public class EventProducer
 {
-    private static final Logger logger = LoggerFactory.getLogger(Producer.class);
+    private static final Logger logger = LoggerFactory.getLogger(EventProducer.class);
     private static final String TOPIC = "auth-events";
 
     @Autowired
@@ -21,7 +21,7 @@ public class Producer
     public void publishAuthDatum(String username, String description) throws JsonProcessingException
     {
 
-        Analytic authDatum = new Analytic();
+        AuthEvent authDatum = new AuthEvent();
         authDatum.setPrincipal(username);
         authDatum.setType("AUTH");
         authDatum.setDescription(description);

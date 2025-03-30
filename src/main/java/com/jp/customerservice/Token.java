@@ -20,4 +20,13 @@ public class Token {
     private String status;
     private Date generationTime;
 
+    @Override
+    public String toString() {
+        return "Token{" +
+                "tokenId='" + tokenId + '\'' +
+                ", username='" + username + '\'' +
+                ", status='" + status + '\'' +
+                ", generationTime=" + generationTime +
+                '}';
+    }
 }

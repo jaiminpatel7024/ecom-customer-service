@@ -1,6 +1,6 @@
 package com.jp.customerservice;
 
-public class Analytic {
+public class AuthEvent {
 
     private String type;
     private String principal;
